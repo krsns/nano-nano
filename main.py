@@ -1,6 +1,7 @@
 import threading
 import websocket
-from config import WS_URL, WALLET, WS_TOKEN
+import time
+import json
 from utils.clicker import handle_message, click_loop
 
 def on_open(ws):
@@ -13,29 +14,37 @@ def on_error(ws, error):
 
 def on_close(ws, code, reason):
     print(f"🔌 WS Closed: {code} - {reason}")
+    print("🔄 Reconnecting dalam 3 detik...")
+    time.sleep(3)
 
 def main():
     print("=" * 50)
     print("  🖱️  NanoButton AutoClicker")
     print("=" * 50)
 
-    if not WS_TOKEN:
-        print("\n⚠️  WS_TOKEN belum diisi di .env!")
-        print("Ambil dari browser:")
-        print("  F12 → Console → localStorage.getItem('nanosessiontoken')")
+    # Input token saat start
+    print("\n📋 Cara dapat token:")
+    print("   Buka thenanobutton.com → F12 → Console")
+    print("   localStorage.getItem('nanosessiontoken')\n")
+
+    wallet = input("💳 Masukkan Nano Wallet Address: ").strip()
+    token = input("🔑 Masukkan WS Token: ").strip()
+
+    if not wallet or not token:
+        print("❌ Wallet dan token tidak boleh kosong!")
         return
 
-    if not WALLET:
-        print("\n⚠️  NANO_WALLET belum diisi di .env!")
-        return
+    ws_url = f"wss://api.thenanobutton.com/ws?token={token}"
 
-    print(f"\n💳 Wallet: {WALLET[:20]}...")
-    print(f"🔑 Token : {WS_TOKEN[:20]}...\n")
+    print(f"\n💳 Wallet : {wallet[:20]}...")
+    print(f"🔑 Token  : {token[:20]}...")
+    print(f"⚡ Interval: 0.3 detik/klik")
+    print(f"🌐 Connecting...\n")
 
     while True:
         try:
             ws = websocket.WebSocketApp(
-                WS_URL,
+                ws_url,
                 on_open=on_open,
                 on_message=handle_message,
                 on_error=on_error,
@@ -47,8 +56,7 @@ def main():
             break
         except Exception as e:
             print(f"❌ Error: {e}")
-            import time
-            time.sleep(5)
+            time.sleep(3)
 
 if __name__ == "__main__":
     main()
